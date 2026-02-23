@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Moje Nutriční Kalkulačka</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        select, input, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+        .total { font-weight: bold; background-color: #eee; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>Můj Jídelníček</h1>
+
+    <div class="input-group">
+        <select id="foodSelect">
+            <option value="kureci">Kuřecí prsa (100g)</option>
+            <option value="ryze">Rýže (100g)</option>
+            <option value="vejce">Vejce (1 ks / 50g)</option>
+            <option value="avokado">Avokádo (100g)</option>
+        </select>
+        <input type="number" id="amount" placeholder="Gramy" value="100">
+        <button onclick="addFood()">Přidat</button>
+    </div>
+
+    <table id="logTable">
+        <thead>
+            <tr>
+                <th>Jídlo</th>
+                <th>Bílkoviny</th>
+                <th>Tuky</th>
+                <th>Sacharidy</th>
+            </tr>
+        </thead>
+        <tbody id="logBody">
+            </tbody>
+        <tfoot>
+            <tr class="total">
+                <td>Celkem (g)</td>
+                <td id="totalB">0</td>
+                <td id="totalT">0</td>
+                <td id="totalS">0</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    // "Databáze" potravin (hodnoty na 100g)
+    const db = {
+        kureci: { n: "Kuřecí prsa", b: 31, t: 3.6, s: 0 },
+        ryze: { n: "Rýže", b: 2.7, t: 0.3, s: 28 },
+        vejce: { n: "Vejce", b: 13, t: 11, s: 1.1 },
+        avokado: { n: "Avokádo", b: 2, t: 15, s: 9 }
+    };
+
+    let totals = { b: 0, t: 0, s: 0 };
+
+    function addFood() {
+        const foodKey = document.getElementById('foodSelect').value;
+        const grams = parseFloat(document.getElementById('amount').value);
+        const food = db[foodKey];
+        const ratio = grams / 100;
+
+        // Výpočet
+        const b = (food.b * ratio).toFixed(1);
+        const t = (food.t * ratio).toFixed(1);
+        const s = (food.s * ratio).toFixed(1);
+
+        // Přidání do tabulky
+        const row = `<tr><td>${food.n} (${grams}g)</td><td>${b}g</td><td>${t}g</td><td>${s}g</td></tr>`;
+        document.getElementById('logBody').innerHTML += row;
+
+        // Aktualizace celkového součtu
+        totals.b += parseFloat(b);
+        totals.t += parseFloat(t);
+        totals.s += parseFloat(s);
+
+        document.getElementById('totalB').innerText = totals.b.toFixed(1);
+        document.getElementById('totalT').innerText = totals.t.toFixed(1);
+        document.getElementById('totalS').innerText = totals.s.toFixed(1);
+    }
+</script>
+
+</body>
+</html>
