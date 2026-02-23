@@ -2,93 +2,202 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Moje Nutriční Kalkulačka</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Týdenní Nutriční Deník</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
-        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        select, input, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background-color: #28a745; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
-        .total { font-weight: bold; background-color: #eee; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #eef2f3; color: #333; }
+        .box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+        
+        /* Menu pro dny */
+        .days-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-bottom: 20px; background: #dfe6e9; padding: 10px; border-radius: 8px; }
+        .day-btn { flex: 1; min-width: 45px; padding: 10px; border: none; cursor: pointer; background: white; border-radius: 5px; transition: 0.3s; font-weight: bold; }
+        .day-btn.active { background: #007bff; color: white; transform: scale(1.05); }
+
+        /* Vstupy */
+        .input-group { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 25px; }
+        select, input, button { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+        button.add-btn { background-color: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button.add-btn:hover { background-color: #218838; }
+
+        /* Tabulka */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border-bottom: 1px solid #eee; padding: 15px 10px; text-align: left; }
+        th { background-color: #f8f9fa; color: #555; }
+        .total-row { background-color: #f1f3f5; font-weight: bold; font-size: 1.1em; color: #000; }
+        .delete-btn { color: #dc3545; cursor: pointer; border: 1px solid #dc3545; background: none; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }
+        .delete-btn:hover { background: #dc3545; color: white; }
+
+        .empty-msg { text-align: center; color: #888; padding: 20px; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h1>Můj Jídelníček</h1>
+    <h1>🍎 Nutriční Deník</h1>
+
+    <div class="days-nav" id="daysNav">
+        <button class="day-btn active" onclick="changeDay('Pondělí')">Po</button>
+        <button class="day-btn" onclick="changeDay('Úterý')">Út</button>
+        <button class="day-btn" onclick="changeDay('Středa')">St</button>
+        <button class="day-btn" onclick="changeDay('Čtvrtek')">Čt</button>
+        <button class="day-btn" onclick="changeDay('Pátek')">Pá</button>
+        <button class="day-btn" onclick="changeDay('Sobota')">So</button>
+        <button class="day-btn" onclick="changeDay('Neděle')">Ne</button>
+    </div>
+
+    <h2 id="currentDayTitle" style="text-align: center; color: #007bff;">Pondělí</h2>
 
     <div class="input-group">
         <select id="foodSelect">
             <option value="kureci">Kuřecí prsa (100g)</option>
             <option value="ryze">Rýže (100g)</option>
-            <option value="vejce">Vejce (1 ks / 50g)</option>
-            <option value="avokado">Avokádo (100g)</option>
+            <option value="vejce">Vejce (50g)</option>
+            <option value="tvaroh">Tvaroh (100g)</option>
+            <option value="vlocky">Ovesné vločky (100g)</option>
+            <option value="banan">Banán (100g)</option>
+            <option value="jablko">Jablko (100g)</option>
         </select>
-        <input type="number" id="amount" placeholder="Gramy" value="100">
-        <button onclick="addFood()">Přidat</button>
+        <input type="number" id="amount" placeholder="Gramy" value="100" min="1">
+        <button class="add-btn" onclick="addFood()">Přidat</button>
     </div>
 
-    <table id="logTable">
+    <table>
         <thead>
             <tr>
                 <th>Jídlo</th>
                 <th>Bílkoviny</th>
                 <th>Tuky</th>
                 <th>Sacharidy</th>
+                <th></th>
             </tr>
         </thead>
         <tbody id="logBody">
             </tbody>
         <tfoot>
-            <tr class="total">
-                <td>Celkem (g)</td>
-                <td id="totalB">0</td>
-                <td id="totalT">0</td>
-                <td id="totalS">0</td>
+            <tr class="total-row">
+                <td>CELKEM</td>
+                <td id="totalB">0g</td>
+                <td id="totalT">0g</td>
+                <td id="totalS">0g</td>
+                <td></td>
             </tr>
         </tfoot>
     </table>
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <button onclick="clearDay()" style="background-color: #6c757d; color: white; font-size: 0.8em; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px;">Smazat dnešní záznamy</button>
+    </div>
 </div>
 
 <script>
-    // "Databáze" potravin (hodnoty na 100g)
+    // Naše malá databáze potravin (hodnoty na 100g)
     const db = {
         kureci: { n: "Kuřecí prsa", b: 31, t: 3.6, s: 0 },
         ryze: { n: "Rýže", b: 2.7, t: 0.3, s: 28 },
         vejce: { n: "Vejce", b: 13, t: 11, s: 1.1 },
-        avokado: { n: "Avokádo", b: 2, t: 15, s: 9 }
+        tvaroh: { n: "Tvaroh", b: 12, t: 0.5, s: 4 },
+        vlocky: { n: "Ovesné vločky", b: 13, t: 7, s: 60 },
+        banan: { n: "Banán", b: 1.1, t: 0.3, s: 23 },
+        jablko: { n: "Jablko", b: 0.3, t: 0.2, s: 14 }
     };
 
-    let totals = { b: 0, t: 0, s: 0 };
+    let currentDay = "Pondělí";
+    
+    // Načtení dat z paměti prohlížeče
+    let data = JSON.parse(localStorage.getItem('nutritionData')) || {
+        "Pondělí": [], "Úterý": [], "Středa": [], "Čtvrtek": [], "Pátek": [], "Sobota": [], "Neděle": []
+    };
 
+    // Funkce pro změnu dne
+    function changeDay(day) {
+        currentDay = day;
+        document.getElementById('currentDayTitle').innerText = day;
+        
+        // Aktualizace vzhledu tlačítek
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.classList.remove('active');
+            // Porovnáváme text tlačítka s prvními dvěma písmeny dne
+            if(btn.innerText === day.substring(0,2)) btn.classList.add('active');
+        });
+
+        renderTable();
+    }
+
+    // Funkce pro přidání jídla
     function addFood() {
         const foodKey = document.getElementById('foodSelect').value;
         const grams = parseFloat(document.getElementById('amount').value);
+        
+        if (isNaN(grams) || grams <= 0) return;
+
         const food = db[foodKey];
         const ratio = grams / 100;
 
-        // Výpočet
-        const b = (food.b * ratio).toFixed(1);
-        const t = (food.t * ratio).toFixed(1);
-        const s = (food.s * ratio).toFixed(1);
+        const entry = {
+            n: food.n,
+            b: (food.b * ratio),
+            t: (food.t * ratio),
+            s: (food.s * ratio),
+            g: grams,
+            id: Date.now() // Unikátní ID pro mazání
+        };
 
-        // Přidání do tabulky
-        const row = `<tr><td>${food.n} (${grams}g)</td><td>${b}g</td><td>${t}g</td><td>${s}g</td></tr>`;
-        document.getElementById('logBody').innerHTML += row;
-
-        // Aktualizace celkového součtu
-        totals.b += parseFloat(b);
-        totals.t += parseFloat(t);
-        totals.s += parseFloat(s);
-
-        document.getElementById('totalB').innerText = totals.b.toFixed(1);
-        document.getElementById('totalT').innerText = totals.t.toFixed(1);
-        document.getElementById('totalS').innerText = totals.s.toFixed(1);
+        data[currentDay].push(entry);
+        saveAndRender();
     }
+
+    // Funkce pro smazání jedné položky
+    function removeEntry(index) {
+        data[currentDay].splice(index, 1);
+        saveAndRender();
+    }
+
+    // Funkce pro vymazání celého dne
+    function clearDay() {
+        if(confirm(`Opravdu chcete smazat všechna data pro den: ${currentDay}?`)) {
+            data[currentDay] = [];
+            saveAndRender();
+        }
+    }
+
+    // Uložit do LocalStorage a překreslit tabulku
+    function saveAndRender() {
+        localStorage.setItem('nutritionData', JSON.stringify(data));
+        renderTable();
+    }
+
+    // Vykreslení tabulky podle aktuálních dat
+    function renderTable() {
+        const body = document.getElementById('logBody');
+        body.innerHTML = "";
+        
+        let tB = 0, tT = 0, tS = 0;
+
+        if (data[currentDay].length === 0) {
+            body.innerHTML = '<tr><td colspan="5" class="empty-msg">Dnes jsi ještě nic nesnědl.</td></tr>';
+        } else {
+            data[currentDay].forEach((item, index) => {
+                tB += item.b; tT += item.t; tS += item.s;
+                body.innerHTML += `
+                    <tr>
+                        <td>${item.n} (${item.g}g)</td>
+                        <td>${item.b.toFixed(1)}g</td>
+                        <td>${item.t.toFixed(1)}g</td>
+                        <td>${item.s.toFixed(1)}g</td>
+                        <td><button class="delete-btn" onclick="removeEntry(${index})">Smazat</button></td>
+                    </tr>`;
+            });
+        }
+
+        // Aktualizace celkových součtů
+        document.getElementById('totalB').innerText = tB.toFixed(1) + "g";
+        document.getElementById('totalT').innerText = tT.toFixed(1) + "g";
+        document.getElementById('totalS').innerText = tS.toFixed(1) + "g";
+    }
+
+    // Spustit vykreslení při načtení stránky
+    renderTable();
 </script>
 
 </body>
