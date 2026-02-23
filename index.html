@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitKuchařka - Rychlé Hledání</title>
+    <title>FitKuchařka - Ultra Rychlá</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --bg: #f4f7f6; --text: #2c3e50; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-bottom: 90px; color: var(--text); }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* Kalendář */
         .days-nav { display: flex; justify-content: space-between; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; gap: 5px; }
         .day-tab { padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 0.8rem; }
         .day-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Dashboard */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #e3f2fd; padding: 12px; border-radius: 15px; margin-bottom: 15px; }
         .stat-box { text-align: center; font-size: 0.7rem; }
         .stat-box b { display: block; font-size: 0.9rem; color: var(--primary); }
 
-        /* Našeptávač */
         .autocomplete-wrapper { position: relative; width: 100%; margin-top: 5px; }
         #suggestions { 
             position: absolute; top: 100%; left: 0; right: 0; 
@@ -28,17 +25,14 @@
             max-height: 250px; overflow-y: auto; z-index: 1001; box-shadow: 0 10px 20px rgba(0,0,0,0.15);
             display: none;
         }
-        .suggestion-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 0.9rem; line-height: 1.3; }
-        .suggestion-item:hover { background: #f8f9fa; }
-        .suggestion-item small { color: #888; display: block; font-size: 0.75rem; }
-
-        /* Formulář */
-        .form-card { background: #fff; border: 2px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-color: var(--success); }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 0.9rem; }
+        .local-item { border-left: 4px solid var(--success); background: #f0fff4; }
+        
+        .form-card { background: #fff; border: 2px solid var(--success); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
         select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-top: 8px; font-size: 1rem; }
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .add-btn { width: 100%; margin-top: 15px; padding: 14px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; }
 
-        /* Seznam */
         .meal-section { margin-top: 15px; border-radius: 12px; border: 1px solid #eee; overflow: hidden; background: white; }
         .meal-header { background: #f8f9fa; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; font-size: 0.9rem; border-bottom: 1px solid #eee; }
         .log-item { padding: 10px 15px; border-bottom: 1px solid #f9f9f9; position: relative; }
@@ -65,16 +59,15 @@
     </div>
 
     <div id="manual-form-area" style="display: none;" class="form-card">
-        <h3 style="margin:0">Hledat nebo zapsat</h3>
         <div class="autocomplete-wrapper">
-            <input type="text" id="m-name" placeholder="Např. Šunka nejvyšší jakosti..." autocomplete="off">
+            <input type="text" id="m-name" placeholder="Hledej (rohlík, jablko, sýr...)" autocomplete="off">
             <div id="suggestions"></div>
         </div>
         <select id="m-meal-type">
             <option value="snidane">Snídaně</option><option value="dop-svacina">Dop. svačina</option><option value="obed">Oběd</option><option value="odp-svacina">Odp. svačina</option><option value="veceře">Večeře</option><option value="druha-veceře">2. Večeře</option>
         </select>
         <div class="input-grid">
-            <input type="number" id="m-weight" placeholder="Snědeno (g)" value="100">
+            <input type="number" id="m-weight" placeholder="Gramy" value="100">
             <input type="number" id="m-kcal" placeholder="Kcal / 100g">
             <input type="number" id="m-prot" placeholder="Bílkoviny / 100g">
             <input type="number" id="m-carb" placeholder="Sacharidy / 100g">
@@ -89,7 +82,7 @@
 
 <div id="scanner-wrapper">
     <div id="reader" style="width: 300px;"></div>
-    <button onclick="stopScanner()" style="position:absolute; bottom:50px; color:white; background:none; border:1px solid white; padding:10px 20px; border-radius:10px;">Zrušit</button>
+    <button onclick="stopScanner()" style="position:absolute; bottom:50px; color:white; border:1px solid white; padding:10px 20px; border-radius:10px;">Zrušit</button>
 </div>
 
 <div class="floating-btns">
@@ -98,6 +91,22 @@
 </div>
 
 <script>
+    // --- LOKÁLNÍ DATABÁZE ZÁKLADNÍCH POTRAVIN ---
+    const LOCAL_DB = [
+        { name: "Rohlík bílý", kcal: 310, prot: 9, carb: 60, fat: 3 },
+        { name: "Chléb Šumava", kcal: 245, prot: 8, carb: 48, fat: 1.5 },
+        { name: "Chléb žitný", kcal: 230, prot: 6, carb: 45, fat: 1.2 },
+        { name: "Jablko", kcal: 52, prot: 0.3, carb: 14, fat: 0.2 },
+        { name: "Banán", kcal: 89, prot: 1.1, carb: 23, fat: 0.3 },
+        { name: "Kuřecí prsa (syrová)", kcal: 105, prot: 23, carb: 0, fat: 1 },
+        { name: "Vejce (1 ks)", kcal: 155, prot: 13, carb: 1.1, fat: 11 },
+        { name: "Tvaroh odtučněný", kcal: 68, prot: 12, carb: 4, fat: 0.5 },
+        { name: "Rýže Basmati (vařená)", kcal: 120, prot: 3, carb: 25, fat: 0.4 },
+        { name: "Brambory vařené", kcal: 77, prot: 2, carb: 17, fat: 0.1 },
+        { name: "Máslo", kcal: 717, prot: 0.8, carb: 0.1, fat: 81 },
+        { name: "Šunka nejvyšší jakosti", kcal: 98, prot: 19, carb: 1, fat: 2 }
+    ];
+
     const MEAL_TYPES = { 'snidane': 'Snídaně', 'dop-svacina': 'Dopolední svačina', 'obed': 'Oběd', 'odp-svacina': 'Odpolední svačina', 'veceře': 'Večeře', 'druha-veceře': 'Druhá večeře' };
     let weeklyData = JSON.parse(localStorage.getItem('weeklyData')) || [[],[],[],[],[],[],[]];
     let currentDay = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
@@ -107,53 +116,54 @@
     const mNameInput = document.getElementById('m-name');
     const suggestionsDiv = document.getElementById('suggestions');
 
-    // --- RYCHLÉ VYHLEDÁVÁNÍ ---
     mNameInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        const query = e.target.value;
+        const query = e.target.value.toLowerCase();
+        suggestionsDiv.innerHTML = '';
         
-        if (query.length < 3) { suggestionsDiv.style.display = 'none'; return; }
+        if (query.length < 2) { suggestionsDiv.style.display = 'none'; return; }
 
-        suggestionsDiv.innerHTML = '<div class="suggestion-item">Hledám...</div>';
+        // 1. Nejprve prohledat LOKÁLNÍ DB (bleskové)
+        const localMatches = LOCAL_DB.filter(p => p.name.toLowerCase().includes(query));
+        localMatches.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item local-item';
+            div.innerHTML = `<b>⭐ ${p.name}</b> <small>(Základní)</small>`;
+            div.onclick = () => selectProduct(p, p.name);
+            suggestionsDiv.appendChild(div);
+        });
+
         suggestionsDiv.style.display = 'block';
 
+        // 2. Poté zkusit ONLINE hledání
+        clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
             try {
-                // Přidán filtr na Českou republiku pro přesnější výsledky
-                const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=12&tagtype_0=countries&tag_contains_0=contains&tag_0=czech`;
-                const res = await fetch(url);
+                const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=8&tagtype_0=countries&tag_contains_0=contains&tag_0=czech`);
                 const data = await res.json();
-                
-                if (data.products && data.products.length > 0) {
-                    suggestionsDiv.innerHTML = '';
-                    data.products.forEach(p => {
-                        const brand = p.brands ? p.brands.split(',')[0] : '';
-                        const name = p.product_name_cs || p.product_name || 'Neznámý produkt';
-                        const fullName = brand ? `${brand} - ${name}` : name;
-                        
-                        const div = document.createElement('div');
-                        div.className = 'suggestion-item';
-                        div.innerHTML = `<b>${fullName}</b><small>${p.quantity || ''}</small>`;
-                        div.onclick = () => selectProduct(p, fullName);
-                        suggestionsDiv.appendChild(div);
-                    });
-                } else {
-                    suggestionsDiv.innerHTML = '<div class="suggestion-item">Nic nenalezeno. Zadejte hodnoty ručně.</div>';
-                }
-            } catch (err) {
-                suggestionsDiv.innerHTML = '<div class="suggestion-item">Chyba připojení.</div>';
-            }
-        }, 300); // Počká 300ms po dopsání
+                data.products?.forEach(p => {
+                    const name = (p.brands ? p.brands + ' ' : '') + (p.product_name_cs || p.product_name);
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.innerHTML = `🛒 ${name}`;
+                    div.onclick = () => selectProduct({
+                        kcal: p.nutriments['energy-kcal_100g'] || 0,
+                        prot: p.nutriments.proteins_100g || 0,
+                        carb: p.nutriments.carbohydrates_100g || 0,
+                        fat: p.nutriments.fat_100g || 0
+                    }, name);
+                    suggestionsDiv.appendChild(div);
+                });
+            } catch (err) {}
+        }, 400);
     });
 
-    function selectProduct(p, fullName) {
+    function selectProduct(data, fullName) {
         mNameInput.value = fullName;
         suggestionsDiv.style.display = 'none';
-        const n = p.nutriments;
-        document.getElementById('m-kcal').value = Math.round(n['energy-kcal_100g'] || 0);
-        document.getElementById('m-prot').value = n.proteins_100g || 0;
-        document.getElementById('m-carb').value = n.carbohydrates_100g || 0;
-        document.getElementById('m-fat').value = n.fat_100g || 0;
+        document.getElementById('m-kcal').value = Math.round(data.kcal);
+        document.getElementById('m-prot').value = data.prot;
+        document.getElementById('m-carb').value = data.carb;
+        document.getElementById('m-fat').value = data.fat;
     }
 
     // --- ZÁKLADNÍ FUNKCE ---
@@ -168,9 +178,15 @@
             const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
             const data = await res.json();
             if (data.status === 1) {
-                selectProduct(data.product, data.product.product_name_cs || data.product.product_name);
+                const p = data.product;
+                selectProduct({
+                    kcal: p.nutriments['energy-kcal_100g'] || 0,
+                    prot: p.nutriments.proteins_100g || 0,
+                    carb: p.nutriments.carbohydrates_100g || 0,
+                    fat: p.nutriments.fat_100g || 0
+                }, p.product_name_cs || p.product_name);
                 showManualForm();
-            } else { alert("Kód nenalezen."); }
+            }
         });
     }
 
