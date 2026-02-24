@@ -3,64 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitKuchařka PRO - Kompletní Verze</title>
+    <title>FitKuchařka - Databázová Verze</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #3498db; --success: #2ecc71; --danger: #e74c3c; --bg: #f4f7f6; --text: #2c3e50; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-bottom: 90px; color: var(--text); }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-bottom: 90px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        /* Navigace dní */
-        .days-nav { display: flex; justify-content: space-between; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; gap: 5px; }
-        .day-tab { padding: 8px 12px; border-radius: 10px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 0.8rem; flex-shrink: 0; }
-        .day-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* Statistiky */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #e3f2fd; padding: 12px; border-radius: 15px; margin-bottom: 15px; }
         .stat-box { text-align: center; font-size: 0.75rem; }
         .stat-box b { display: block; font-size: 1rem; color: var(--primary); }
-
-        /* Formulář a hledání */
-        .form-card { background: white; border: 2px solid var(--success); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
         .autocomplete-wrapper { position: relative; }
         #suggestions { 
             position: absolute; top: 100%; left: 0; right: 0; 
             background: white; border: 1px solid #ddd; border-radius: 0 0 10px 10px; 
-            max-height: 250px; overflow-y: auto; z-index: 1001; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: none;
+            max-height: 250px; overflow-y: auto; z-index: 1001; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: none;
         }
-        .suggestion-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        .suggestion-item img { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; }
-
-        /* Fotoaparát */
-        .photo-area { width: 100%; height: 120px; background: #f9f9f9; border: 2px dashed #ccc; border-radius: 10px; margin-top: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
-        .photo-area img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* Vstupy */
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-top: 8px; font-size: 1rem; }
-        
-        /* Seznam jídel */
-        .meal-section { margin-top: 15px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: white; }
-        .meal-header { background: #f8f9fa; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; }
-        .log-item { padding: 10px; border-bottom: 1px solid #f9f9f9; display: flex; align-items: center; gap: 10px; position: relative; }
-        .log-item img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; background: #eee; }
-        .del-btn { margin-left: auto; background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; }
-
-        .fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--success); color: white; border: none; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; }
+        .suggestion-item { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+        .local { border-left: 5px solid var(--success); background: #f0fff4; }
+        .form-card { background: white; border: 2px solid var(--success); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; margin-top: 8px; }
+        .floating-btns { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .fab { width: 60px; height: 60px; border-radius: 50%; border: none; color: white; font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .meal-section { margin-top: 15px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; }
+        .meal-header { background: #f8f9fa; padding: 10px; font-weight: bold; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .log-item { padding: 10px; border-bottom: 1px solid #f9f9f9; position: relative; }
+        .del { position: absolute; right: 10px; top: 10px; background: none; border: none; color: var(--danger); font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🍎 Moje FitKuchařka</h1>
-
-    <div class="days-nav">
-        <div class="day-tab" onclick="changeDay(0)">Po</div>
-        <div class="day-tab" onclick="changeDay(1)">Út</div>
-        <div class="day-tab" onclick="changeDay(2)">St</div>
-        <div class="day-tab" onclick="changeDay(3)">Čt</div>
-        <div class="day-tab" onclick="changeDay(4)">Pá</div>
-        <div class="day-tab" onclick="changeDay(5)">So</div>
-        <div class="day-tab" onclick="changeDay(6)">Ne</div>
-    </div>
+    <h1>🍎 FitKuchařka</h1>
 
     <div class="stats-grid">
         <div class="stat-box">Kcal<b id="total-kcal">0</b></div>
@@ -68,109 +42,75 @@
         <div class="stat-box">Sacharidy<b id="total-carb">0</b></div>
     </div>
 
-    <div id="form-area" class="form-card">
+    <div id="manual-form-area" style="display: none;" class="form-card">
         <div class="autocomplete-wrapper">
-            <input type="text" id="f-name" placeholder="Název jídla (např. Rohlík)" autocomplete="off">
+            <input type="text" id="m-name" placeholder="Co jsi dnes jedl?" autocomplete="off">
             <div id="suggestions"></div>
         </div>
-
-        <div class="photo-area" onclick="document.getElementById('f-file').click()">
-            <span id="f-photo-label">📸 Přidat fotku</span>
-            <img id="f-preview" style="display:none">
-        </div>
-        <input type="file" id="f-file" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this)">
-
         <div style="display: flex; gap: 5px;">
-            <input type="number" id="f-weight" value="100" placeholder="Gramy">
-            <select id="f-type">
-                <option value="snidane">Snídaně</option>
-                <option value="dop-svacina">Svačina</option>
-                <option value="obed">Oběd</option>
-                <option value="veceře">Večeře</option>
+            <input type="number" id="m-weight" value="100">
+            <select id="m-meal-type">
+                <option value="snidane">Snídaně</option><option value="obed">Oběd</option><option value="veceře">Večeře</option><option value="dop-svacina">Svačina</option>
             </select>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-            <input type="number" id="f-kcal" placeholder="kcal/100g">
-            <input type="number" id="f-prot" placeholder="bílk/100g">
-            <input type="number" id="f-carb" placeholder="sach/100g">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 10px;">
+            <input type="number" id="m-kcal" placeholder="kcal">
+            <input type="number" id="m-prot" placeholder="bílk">
+            <input type="number" id="m-carb" placeholder="sach">
         </div>
-        <button onclick="saveFood()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:8px; margin-top:10px; font-weight:bold;">ULOŽIT</button>
-        <button onclick="closeForm()" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">Zrušit</button>
+        <button onclick="addFood()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:8px; margin-top:10px; font-weight:bold;">ULOŽIT</button>
     </div>
 
-    <div id="meals-list"></div>
+    <div id="meals-container"></div>
 </div>
 
-<button class="fab" onclick="openForm()">+</button>
+<div class="floating-btns">
+    <button class="fab" style="background:var(--success)" onclick="document.getElementById('manual-form-area').style.display='block'; document.getElementById('m-name').focus();">✍️</button>
+    <button class="fab" style="background:var(--primary)" onclick="startScanner()">📷</button>
+</div>
 
 <script>
-    // Pevná databáze pro začátek
-    const BASE_DB = [
-        { n: "Rohlík bílý", k: 310, p: 9, c: 60 },
-        { n: "Chléb Šumava", k: 245, p: 8, c: 48 },
-        { n: "Banán", k: 89, p: 1.1, c: 23 },
-        { n: "Vejce vařené", k: 155, p: 13, c: 1 }
+    // --- ROZŠÍŘENÁ TABULKA POTRAVIN ---
+    const FOOD_DB = [
+        { n: "Rohlík bílý (43g)", k: 310, p: 9, c: 60, f: 3 },
+        { n: "Chléb Šumava", k: 245, p: 8, c: 48, f: 1 },
+        { n: "Brambory vařené", k: 77, p: 2, c: 17, f: 0 },
+        { n: "Rýže vařená", k: 130, p: 3, c: 28, f: 0 },
+        { n: "Těstoviny vařené", k: 158, p: 6, c: 31, f: 1 },
+        { n: "Kuřecí prsa pečená", k: 165, p: 31, c: 0, f: 4 },
+        { n: "Vejce vařené (1ks)", k: 155, p: 13, c: 1, f: 11 },
+        { n: "Banán", k: 89, p: 1, c: 23, f: 0 },
+        { n: "Jablko", k: 52, p: 0, c: 14, f: 0 },
+        { n: "Tvaroh odtučněný", k: 68, p: 12, c: 4, f: 0 },
+        { n: "Šunka nejvyšší jakosti", k: 100, p: 20, c: 1, f: 2 },
+        { n: "Eidam 30%", k: 270, p: 30, c: 1, f: 16 },
+        { n: "Mléko polotučné", k: 47, p: 3, c: 5, f: 1.5 },
+        { n: "Máslo", k: 740, p: 1, c: 1, f: 82 },
+        { n: "Jogurt bílý 3%", k: 62, p: 4, c: 5, f: 3 },
+        { n: "Ovesné vločky", k: 370, p: 13, c: 60, f: 7 },
+        { n: "Hovězí maso zadní", k: 150, p: 21, c: 0, f: 7 },
+        { n: "Losos filet", k: 200, p: 20, c: 0, f: 13 }
     ];
 
-    // Data z paměti
-    let weeklyLog = JSON.parse(localStorage.getItem('fitWeeklyLog')) || [[],[],[],[],[],[],[]];
-    let customDB = JSON.parse(localStorage.getItem('fitCustomDB')) || [];
-    let currentDay = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-    let tempPhoto = "";
+    let log = JSON.parse(localStorage.getItem('fitLog')) || [];
+    const inp = document.getElementById('m-name');
+    const sug = document.getElementById('suggestions');
 
-    function changeDay(idx) { currentDay = idx; updateUI(); }
-    function openForm() { document.getElementById('form-area').style.display = 'block'; resetForm(); }
-    function closeForm() { document.getElementById('form-area').style.display = 'none'; }
-    
-    function resetForm() {
-        document.getElementById('f-name').value = "";
-        document.getElementById('f-kcal').value = "";
-        document.getElementById('f-prot').value = "";
-        document.getElementById('f-carb').value = "";
-        document.getElementById('f-preview').style.display = "none";
-        document.getElementById('f-photo-label').style.display = "block";
-        tempPhoto = "";
-    }
-
-    function previewPhoto(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                tempPhoto = e.target.result;
-                document.getElementById('f-preview').src = tempPhoto;
-                document.getElementById('f-preview').style.display = "block";
-                document.getElementById('f-photo-label').style.display = "none";
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    // Vyhledávání v databázi
-    document.getElementById('f-name').addEventListener('input', (e) => {
+    inp.addEventListener('input', (e) => {
         const val = e.target.value.toLowerCase();
-        const sug = document.getElementById('suggestions');
         sug.innerHTML = '';
-        if (val.length < 1) { sug.style.display = 'none'; return; }
+        if (val.length < 2) { sug.style.display = 'none'; return; }
 
-        const allFoods = [...customDB, ...BASE_DB.map(x => ({...x, i:""}))];
-        const matches = allFoods.filter(x => x.n.toLowerCase().includes(val));
-
+        const matches = FOOD_DB.filter(x => x.n.toLowerCase().includes(val));
         matches.forEach(x => {
             const d = document.createElement('div');
-            d.className = 'suggestion-item';
-            const imgHtml = x.i ? `<img src="${x.i}">` : `<div style="width:35px;height:35px;background:#eee;border-radius:4px"></div>`;
-            d.innerHTML = `${imgHtml} <span>${x.n} (${x.k} kcal)</span>`;
+            d.className = 'suggestion-item local';
+            d.innerHTML = `<b>${x.n}</b> <small>${x.k} kcal/100g</small>`;
             d.onclick = () => {
-                document.getElementById('f-name').value = x.n;
-                document.getElementById('f-kcal').value = x.k;
-                document.getElementById('f-prot').value = x.p;
-                document.getElementById('f-carb').value = x.c;
-                if(x.i) {
-                    tempPhoto = x.i;
-                    document.getElementById('f-preview').src = x.i;
-                    document.getElementById('f-preview').style.display = "block";
-                    document.getElementById('f-photo-label').style.display = "none";
-                }
+                inp.value = x.n;
+                document.getElementById('m-kcal').value = x.k;
+                document.getElementById('m-prot').value = x.p;
+                document.getElementById('m-carb').value = x.c;
                 sug.style.display = 'none';
             };
             sug.appendChild(d);
@@ -178,68 +118,50 @@
         sug.style.display = matches.length ? 'block' : 'none';
     });
 
-    function saveFood() {
-        const name = document.getElementById('f-name').value;
-        const kcal = Number(document.getElementById('f-kcal').value);
-        const prot = Number(document.getElementById('f-prot').value);
-        const carb = Number(document.getElementById('f-carb').value);
-        const weight = Number(document.getElementById('f-weight').value);
-        const type = document.getElementById('f-type').value;
-
-        if (!name) return;
-
-        // Přidání do vlastní databáze (pokud je nové)
-        if (!customDB.some(x => x.n.toLowerCase() === name.toLowerCase())) {
-            customDB.push({ n: name, k: kcal, p: prot, c: carb, i: tempPhoto });
-            localStorage.setItem('fitCustomDB', JSON.stringify(customDB));
-        }
-
-        // Zápis do deníku
-        const r = weight / 100;
-        weeklyLog[currentDay].push({
-            id: Date.now(), n: name, k: Math.round(kcal * r), p: (prot * r).toFixed(1), c: (carb * r).toFixed(1),
-            img: tempPhoto, type: type
-        });
-
-        localStorage.setItem('fitWeeklyLog', JSON.stringify(weeklyLog));
-        updateUI();
-        closeForm();
+    function addFood() {
+        const w = document.getElementById('m-weight').value;
+        const entry = {
+            id: Date.now(),
+            name: inp.value,
+            kcal: Math.round(document.getElementById('m-kcal').value * (w/100)),
+            prot: (document.getElementById('m-prot').value * (w/100)).toFixed(1),
+            carb: (document.getElementById('m-carb').value * (w/100)).toFixed(1),
+            type: document.getElementById('m-meal-type').value
+        };
+        log.push(entry);
+        localStorage.setItem('fitLog', JSON.stringify(log));
+        update();
+        document.getElementById('manual-form-area').style.display = 'none';
     }
 
     function deleteItem(id) {
-        weeklyLog[currentDay] = weeklyLog[currentDay].filter(x => x.id !== id);
-        localStorage.setItem('fitWeeklyLog', JSON.stringify(weeklyLog));
-        updateUI();
+        log = log.filter(x => x.id !== id);
+        localStorage.setItem('fitLog', JSON.stringify(log));
+        update();
     }
 
-    function updateUI() {
-        // Označení dne
-        document.querySelectorAll('.day-tab').forEach((t, i) => t.className = i === currentDay ? 'day-tab active' : 'day-tab');
-        
-        const list = document.getElementById('meals-list');
-        list.innerHTML = '';
+    function update() {
+        const cont = document.getElementById('meals-container');
+        cont.innerHTML = '';
         let sK = 0, sP = 0, sC = 0;
 
-        ['snidane', 'dop-svacina', 'obed', 'veceře'].forEach(mealType => {
-            const items = weeklyLog[currentDay].filter(x => x.type === mealType);
-            if (items.length === 0 && mealType !== 'snidane') return; // Snídani necháme vidět vždy
-
-            let mK = 0; items.forEach(i => mK += i.k);
-            let html = `<div class="meal-section"><div class="meal-header">${mealType.toUpperCase()} <span>${mK} kcal</span></div>`;
-            
+        ['snidane', 'obed', 'veceře', 'dop-svacina'].forEach(t => {
+            const items = log.filter(x => x.type === t);
+            if (items.length === 0) return;
+            let mK = 0; items.forEach(i => mK += i.kcal);
+            let html = `<div class="meal-section"><div class="meal-header">${t.toUpperCase()} <span>${mK} kcal</span></div>`;
             items.forEach(i => {
-                sK += i.k; sP += Number(i.p); sC += Number(i.c);
-                const imgTag = i.img ? `<img src="${i.img}">` : `<div style="width:45px;height:45px;background:#eee;border-radius:8px"></div>`;
-                html += `<div class="log-item">${imgTag}<div><b>${i.n}</b><br><small>B: ${i.p}g | S: ${i.c}g | ${i.k} kcal</small></div><button class="del-btn" onclick="deleteItem(${i.id})">🗑️</button></div>`;
+                sK += i.kcal; sP += Number(i.prot); sC += Number(i.carb);
+                html += `<div class="log-item"><b>${i.name}</b><br><small>B: ${i.prot}g | S: ${i.carb}g — ${i.kcal} kcal</small><button class="del" onclick="deleteItem(${i.id})">🗑️</button></div>`;
             });
-            list.innerHTML += html + '</div>';
+            cont.innerHTML += html + '</div>';
         });
 
         document.getElementById('total-kcal').innerText = sK;
         document.getElementById('total-prot').innerText = sP.toFixed(1);
         document.getElementById('total-carb').innerText = sC.toFixed(1);
     }
-    updateUI();
+    update();
 </script>
 </body>
 </html>
